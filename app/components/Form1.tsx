@@ -11,31 +11,58 @@ import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 const FormSchema = z.object({
-    perkawinan: z.string({ required_error: "Please select a perkawinan to display." }),
-    provinces: z.string({ required_error: "Please select a province to display." }),
-    daerah: z.string({ required_error: "Please select a district to display." }),
-    email: z.string({ required_error: "Please enter a valid email address." }).email(),
-    telepon: z.string({ required_error: "Please enter a valid phone number (e.g. +62 812-3456-7890)." }),
-    studi: z.enum(["ya", "tidak"])
+    perkawinan: z.string({ required_error: "Silakan pilih status perkawinan." }),
+    provinces: z.string({ required_error: "Silakan pilih provinsi." }),
+    daerah: z.string({ required_error: "Silakan pilih kabupaten/kota." }),
+    email: z.string({ required_error: "Silakan masukkan alamat email yang valid." }).email(),
+    telepon: z.string({ required_error: "Silakan masukkan nomor telepon yang valid (misal: 081234567890)." }),
+    studi: z.enum(["ya", "tidak"]),
+    kerja: z.enum(["ya", "tidak"]),
 })
 
 export function Form1() {
+    const router = useRouter();
     const [daerah, setDaerah] = useState<{ label: string; value: string; id: number }[]>([]);
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
+        defaultValues: {
+            perkawinan: "",
+            provinces: "",
+            daerah: "",
+            email: "",
+            telepon: "",
+            studi: "tidak",
+            kerja: "tidak"
+        }
     })
 
-    function onSubmit(data: z.infer<typeof FormSchema>) {
-        toast({
-            title: "You submitted the following values:",
-            description: (
-                <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-                    <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-                </pre>
-            ),
-        })
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        try {
+            await axios.post("/api/users/survey/step1", data);
+            toast({
+                title: "Data berhasil disimpan",
+            })
+
+            localStorage.setItem("pilihan", JSON.stringify({
+                studi: data.studi,
+                kerja: data.kerja
+            }))
+
+            setTimeout(() => {
+                router.push('/survey/step-2');
+            }, 2000)
+        } catch (error) {
+            console.error(error)
+            toast({
+                title: "Kesalahan",
+                description: "Terjadi kesalahan. Silakan coba lagi nanti.",
+                variant: "destructive"
+            })
+        }
     }
 
     const handleProvinceChange = (value: string) => {
@@ -43,6 +70,11 @@ export function Form1() {
         if (selectedProvince) {
             setDaerah(selectedProvince.daerah.map(item => ({ ...item })));
         }
+    };
+
+    const handleTeleponChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value.replace(/\D/g, '');
+        form.setValue("telepon", value);
     };
 
     return (
@@ -70,7 +102,7 @@ export function Form1() {
                                         </SelectContent>
                                     </Select>
                                     <FormDescription>
-                                        Perbarui status perkawinan mu
+                                        Perbarui status perkawinanmu
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -99,7 +131,7 @@ export function Form1() {
                                         </SelectContent>
                                     </Select>
                                     <FormDescription>
-                                        Provinsi tempat tinggal mu berada
+                                        Provinsi tempat tinggalmu
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -136,7 +168,7 @@ export function Form1() {
                                             </Select>
                                     }
                                     <FormDescription>
-                                        Kabupaten/Kota tempat tinggal mu berada
+                                        Kabupaten/Kota tempat tinggalmu
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -155,7 +187,7 @@ export function Form1() {
                                         <Input type="email" placeholder="Contoh: pengguna@gmail.com" {...field} />
                                     </FormControl>
                                     <FormDescription>
-                                        Masukan email pribadi mu
+                                        Masukkan email pribadimu
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -171,12 +203,16 @@ export function Form1() {
                                     <FormControl>
                                         <Input
                                             type="text"
-                                            placeholder="Contoh: 08123456789"
+                                            placeholder="Contoh: 081234567890"
                                             {...field}
+                                            onChange={(e) => {
+                                                field.onChange(e);
+                                                handleTeleponChange(e);
+                                            }}
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        Masukan nomor telepon atau whatsapp mu
+                                        Masukkan nomor telepon atau whatsappmu
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -186,13 +222,13 @@ export function Form1() {
                 </section>
 
                 <section className="p-10 h-full w-[90%] md:w-[80%] border-2 border-gray-300 rounded-md flex flex-col justify-center items-start bg-white">
-                    <p className="font-bold text-lg w-full text-left mb-3">AKTIFITAS SETELAH LULUS</p>
+                    <p className="font-bold text-lg w-full text-left mb-3">AKTIVITAS SETELAH LULUS</p>
                     <FormField
                         control={form.control}
                         name="studi"
                         render={({ field }) => (
                             <FormItem className="space-y-3">
-                                <FormLabel>Apakah Anda sedang melanjutkan studi di perguruan tinggi?</FormLabel>
+                                <FormLabel>Apakah akhir-akhir ini Anda sedang melanjutkan studi di perguruan tinggi?</FormLabel>
                                 <FormControl>
                                     <RadioGroup
                                         onValueChange={field.onChange}
@@ -201,7 +237,7 @@ export function Form1() {
                                     >
                                         <FormItem className="flex items-center space-x-3 space-y-0">
                                             <FormControl>
-                                                <RadioGroupItem value="all" />
+                                                <RadioGroupItem value="ya" />
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 YA
@@ -209,7 +245,7 @@ export function Form1() {
                                         </FormItem>
                                         <FormItem className="flex items-center space-x-3 space-y-0">
                                             <FormControl>
-                                                <RadioGroupItem value="mentions" />
+                                                <RadioGroupItem value="tidak" />
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 TIDAK
@@ -224,10 +260,10 @@ export function Form1() {
                     <Separator className="my-4 bg-slate-300" />
                     <FormField
                         control={form.control}
-                        name="studi"
+                        name="kerja"
                         render={({ field }) => (
                             <FormItem className="space-y-3">
-                                <FormLabel>Apakah Anda sedang bekerja atau berwirausaha?</FormLabel>
+                                <FormLabel>Apakah akhir-akhir ini Anda sedang bekerja atau berwirausaha?</FormLabel>
                                 <FormControl>
                                     <RadioGroup
                                         onValueChange={field.onChange}
@@ -236,7 +272,7 @@ export function Form1() {
                                     >
                                         <FormItem className="flex items-center space-x-3 space-y-0">
                                             <FormControl>
-                                                <RadioGroupItem value="all" />
+                                                <RadioGroupItem value="ya" />
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 YA
@@ -244,7 +280,7 @@ export function Form1() {
                                         </FormItem>
                                         <FormItem className="flex items-center space-x-3 space-y-0">
                                             <FormControl>
-                                                <RadioGroupItem value="mentions" />
+                                                <RadioGroupItem value="tidak" />
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 TIDAK
@@ -256,10 +292,9 @@ export function Form1() {
                             </FormItem>
                         )}
                     />
-
-                    <Button className="mt-3 place-self-end" type="submit">Simpan Dan Lanjut</Button>
+                    <Button className="place-self-end" type="submit">Simpan Dan Lanjut</Button>
                 </section>
             </form>
-        </Form >
+        </Form>
     )
 }

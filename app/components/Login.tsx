@@ -60,7 +60,7 @@ export function Login() {
                 if (userData.kelas === 'admin') {
                     router.push('/admin');
                 } else {
-                    router.push('/survey');
+                    router.push('/survey/step-1');
                 }
             }, 2000)
         } catch (error) {
