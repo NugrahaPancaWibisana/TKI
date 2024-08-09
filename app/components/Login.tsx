@@ -40,9 +40,20 @@ export function Login() {
         try {
             const response = await axios.post("/api/users", data);
             const userData = response.data.data[0];
+            const user = localStorage.getItem("selesai");
 
             if (!userData) {
                 throw new Error("User data is undefined");
+            }
+
+            if (user) {
+                toast({
+                    title: "Kamu sudah mengisi survey",
+                    description: (
+                        <p>Kamu tidak bisa lagi mengisi survey untuk kedua kalinya</p>
+                    ),
+                    variant: "destructive"
+                });
             }
 
             toast({

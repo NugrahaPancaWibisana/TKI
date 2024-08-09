@@ -15,18 +15,37 @@ import axios from "axios"
 import { useRouter } from "next/navigation"
 
 const FormSchema = z.object({
-    perkawinan: z.string({ required_error: "Silakan pilih status perkawinan." }),
-    provinces: z.string({ required_error: "Silakan pilih provinsi." }),
-    daerah: z.string({ required_error: "Silakan pilih kabupaten/kota." }),
-    email: z.string({ required_error: "Silakan masukkan alamat email yang valid." }).email(),
-    telepon: z.string({ required_error: "Silakan masukkan nomor telepon yang valid (misal: 081234567890)." }),
-    studi: z.enum(["ya", "tidak"]),
-    kerja: z.enum(["ya", "tidak"]),
-})
+    perkawinan: z.string({ required_error: "Silakan pilih status perkawinan." })
+        .min(3, { message: "Status perkawinan tidak boleh kosong." })
+        .max(20, { message: "Status perkawinan tidak boleh lebih dari 20 karakter." }),
+    provinces: z.string({ required_error: "Silakan pilih provinsi." })
+        .min(3, { message: "Provinsi tidak boleh kosong." })
+        .max(50, { message: "Provinsi tidak boleh lebih dari 50 karakter." }),
+    daerah: z.string({ required_error: "Silakan pilih kabupaten/kota." })
+        .min(3, { message: "Kabupaten/kota tidak boleh kosong" })
+        .max(50, { message: "Kabupaten/kota tidak boleh lebih dari 50 karakter." }),
+    email: z.string({ required_error: "Silakan masukkan alamat email yang valid." })
+        .email({ message: "Alamat email tidak valid." }),
+    telepon: z.string({ required_error: "Silakan masukkan nomor telepon yang valid (misal: 081234567890)." })
+        .regex(/^08\d{8,11}$/, { message: "Nomor telepon harus diawali dengan 08 dan terdiri dari 10-13 digit." }),
+    studi: z.enum(["ya", "tidak"], { errorMap: () => ({ message: "Silakan pilih status studi." }) }),
+    kerja: z.enum(["ya", "tidak"], { errorMap: () => ({ message: "Silakan pilih status kerja." }) }),
+    pekerjaan: z.enum(["bekerja", "berwirausaha"]).optional(),
+}).refine((data) => {
+    if (data.kerja === "ya") {
+        return !!data.pekerjaan;
+    }
+    return true;
+}, {
+    message: "Silakan pilih pekerjaan jika Anda memilih 'ya' untuk status kerja.",
+    path: ["pekerjaan"],
+});
+
 
 export function Form1() {
     const router = useRouter();
     const [daerah, setDaerah] = useState<{ label: string; value: string; id: number }[]>([]);
+    const [pekerjaan, setPekerjaan] = useState<boolean>(false);
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
@@ -49,7 +68,8 @@ export function Form1() {
 
             localStorage.setItem("pilihan", JSON.stringify({
                 studi: data.studi,
-                kerja: data.kerja
+                kerja: data.kerja,
+                pekerjaan: pekerjaan ? data.pekerjaan : null
             }))
 
             setTimeout(() => {
@@ -77,6 +97,10 @@ export function Form1() {
         form.setValue("telepon", value);
     };
 
+    const handleRadioChange = (value: string) => {
+        setPekerjaan(value === 'ya');
+    };
+
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -89,7 +113,7 @@ export function Form1() {
                             render={({ field }) => (
                                 <FormItem className="w-full">
                                     <FormLabel>Status perkawinan</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value} required>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Pilih" />
@@ -118,7 +142,7 @@ export function Form1() {
                                     <Select onValueChange={(value) => {
                                         field.onChange(value);
                                         handleProvinceChange(value);
-                                    }} defaultValue={field.value}>
+                                    }} defaultValue={field.value} required>
                                         <FormControl>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Pilih" />
@@ -184,7 +208,7 @@ export function Form1() {
                                 <FormItem className="w-full">
                                     <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input type="email" placeholder="Contoh: pengguna@gmail.com" {...field} />
+                                        <Input type="email" placeholder="Contoh: pengguna@gmail.com" {...field} required />
                                     </FormControl>
                                     <FormDescription>
                                         Masukkan email pribadimu
@@ -209,6 +233,7 @@ export function Form1() {
                                                 field.onChange(e);
                                                 handleTeleponChange(e);
                                             }}
+                                            required
                                         />
                                     </FormControl>
                                     <FormDescription>
@@ -231,6 +256,7 @@ export function Form1() {
                                 <FormLabel>Apakah akhir-akhir ini Anda sedang melanjutkan studi di perguruan tinggi?</FormLabel>
                                 <FormControl>
                                     <RadioGroup
+                                        required
                                         onValueChange={field.onChange}
                                         defaultValue={field.value}
                                         className="flex flex-col space-y-1"
@@ -257,7 +283,7 @@ export function Form1() {
                             </FormItem>
                         )}
                     />
-                    <Separator className="my-4 bg-slate-300" />
+                    <Separator className="my-4" />
                     <FormField
                         control={form.control}
                         name="kerja"
@@ -266,7 +292,11 @@ export function Form1() {
                                 <FormLabel>Apakah akhir-akhir ini Anda sedang bekerja atau berwirausaha?</FormLabel>
                                 <FormControl>
                                     <RadioGroup
-                                        onValueChange={field.onChange}
+                                        required
+                                        onValueChange={(value) => {
+                                            field.onChange(value);
+                                            handleRadioChange(value);
+                                        }}
                                         defaultValue={field.value}
                                         className="flex flex-col space-y-1"
                                     >
@@ -284,6 +314,42 @@ export function Form1() {
                                             </FormControl>
                                             <FormLabel className="font-normal">
                                                 TIDAK
+                                            </FormLabel>
+                                        </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <Separator className={`my-4 ${pekerjaan ? '' : 'hidden'}`} />
+                    <FormField
+                        control={form.control}
+                        name="pekerjaan"
+                        render={({ field }) => (
+                            <FormItem className={`space-y-3 ${pekerjaan ? '' : 'hidden'}`}>
+                                <FormLabel>Apakah anda bekerja atau berwirausaha?</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                        required
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                        className="flex flex-col space-y-1"
+                                    >
+                                        <FormItem className="flex items-center space-x-3 space-y-0">
+                                            <FormControl>
+                                                <RadioGroupItem value="bekerja" />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                Bekerja
+                                            </FormLabel>
+                                        </FormItem>
+                                        <FormItem className="flex items-center space-x-3 space-y-0">
+                                            <FormControl>
+                                                <RadioGroupItem value="berwirausaha" />
+                                            </FormControl>
+                                            <FormLabel className="font-normal">
+                                                Berwirausaha
                                             </FormLabel>
                                         </FormItem>
                                     </RadioGroup>
