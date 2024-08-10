@@ -68,10 +68,10 @@ export default function Page() {
 
     return (
         <main className="w-full h-full flex flex-col justify-start items-center gap-2 py-5">
-            <div className={`w-[90%] md:w-[80%] border-2 rounded-md text-cente flex justify-center items-center ${tampilan().border} ${tampilan().bg}`}>
-                <p className={`w-full h-full p-1 md:p-5 flex justify-center items-center bg-white border-r rounded-s-md ${tampilan().text} ${tampilan().border}`}>STEP 1 - DATA LULUSAN</p>
-                <p className={`w-full h-full p-1 md:p-5 flex justify-center items-center text-white border-x ${tampilan().bg} ${tampilan().border}`}>STEP 2 - DETAIL AKTIFITAS</p>
-                <p className={`w-full h-full p-1 md:p-5 flex justify-center items-center bg-white border-l rounded-e-md ${tampilan().text} ${tampilan().border}`}>STEP 3 - UMPAN BALIK</p>
+            <div className={`w-[90%] md:w-[80%] border-2 rounded-md text-center flex justify-center items-center ${tampilan().border} ${tampilan().bg}`}>
+                <p className={`w-full h-[80px] p-1 flex justify-center items-center bg-white border-r rounded-s-md ${tampilan().text} ${tampilan().border}`}>STEP 1 - DATA LULUSAN</p>
+                <p className={`w-full h-[80px] p-1 flex justify-center items-center text-white border-x ${tampilan().bg} ${tampilan().border}`}>STEP 2 - DETAIL AKTIFITAS</p>
+                <p className={`w-full h-[80px] p-1 flex justify-center items-center bg-white border-l rounded-e-md ${tampilan().text} ${tampilan().border}`}>STEP 3 - UMPAN BALIK</p>
             </div>
 
             {tampilkanPilihan(pilihan(aktifitasLulusan.studi), pilihan(aktifitasLulusan.kerja), aktifitasLulusan.pekerjaan)}

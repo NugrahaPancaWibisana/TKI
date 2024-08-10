@@ -19,6 +19,7 @@ import { Separator } from "@/components/ui/separator"
 import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { negara } from "../data/dataNegara"
+import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = z.object({
   Studi: z.enum(["Dalam Negeri", "Luar Negeri"], { errorMap: () => ({ message: "Silakan pilih lokasi studi." }) }),
@@ -26,6 +27,11 @@ const formSchema = z.object({
   negaraStudi: z.string(),
   perguruanTinggi: z.string(),
   jurusan: z.string(),
+  alasan: z
+    .string()
+    .min(10, {
+      message: "Alasan anda melanjutkan pendidikan harus lebih dari 10 karakter",
+    })
 })
 
 export function Studi() {
@@ -211,54 +217,73 @@ export function Studi() {
             control={form.control}
             name="jenjangPendidikan"
             render={({ field }) => (
-              <FormItem className="w-full space-y-3">
-                <FormLabel>Apakah program studi/bidang keahlian yang Anda tempuh saat ini selaras dengan program/kompetensi keahlian di SMK?</FormLabel>
+              <FormItem className="w-full">
+                <FormLabel>
+                  Apakah program studi/bidang keahlian yang Anda tempuh saat ini selaras dengan program/kompetensi keahlian di SMK?
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} required>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)">
+                      Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)
+                    </SelectItem>
+                    <SelectItem value="Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)">
+                      Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)
+                    </SelectItem>
+                    <SelectItem value="Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)">
+                      Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)
+                    </SelectItem>
+                    <SelectItem value="Sangat selaras (program keahlian yang sama)">
+                      Sangat selaras (program keahlian yang sama)
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  Pilih status keselarasan program studi dengan kompetensi keahlian SMK.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Separator className="my-4" />
+          <FormField
+            control={form.control}
+            name="jurusan"
+            render={({ field }) => (
+              <FormItem className="place-self-start">
+                <FormLabel>Kapan Anda mulai studi di Perguruan Tinggi?</FormLabel>
                 <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)
-                      </FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="Sangat selaras (program keahlian yang sama)" />
-                      </FormControl>
-                      <FormLabel className="font-normal">
-                        Sangat selaras (program keahlian yang sama)
-                      </FormLabel>
-                    </FormItem>
-                  </RadioGroup>
+                  <Input type="date" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           <Separator className="my-4" />
-          <Button type="submit" className="place-self-end bg-green-500">Submit</Button>
+          <FormField
+            control={form.control}
+            name="alasan"
+            render={({ field }) => (
+              <FormItem className="w-full">
+                <FormLabel>Apa alasan Anda melanjutkan pendidikan?</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Ketikan alasan anda disini"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <Button type="submit" className="place-self-end bg-green-500 mt-5">Submit</Button>
         </section>
       </form>
     </Form>
