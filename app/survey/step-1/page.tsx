@@ -2,7 +2,7 @@ import { Form1 } from "../../components/Form1";
 
 export default function page() {
     return (
-        <main className="w-full h-full flex flex-col justify-start items-center gap-2 py-[100px]">
+        <main className="w-full h-full flex flex-col justify-start items-center gap-2 py-5 pb-[200px]">
             <div className="w-[90%] md:w-[80%] border-2 border-slate-900 rounded-md text-center bg-slate-900 text-white flex justify-center items-center">
                 <p className="w-full h-[80px] p-1 text-sm flex justify-center items-center rounded-s-md">STEP 1 - DATA LULUSAN</p>
                 <p className="w-full h-[80px] p-1 text-sm flex justify-center items-center text-slate-900 bg-white border-x border-slate-900">STEP 2 - DETAIL AKTIFITAS</p>

@@ -1,3 +1,4 @@
+import { DataPribadi } from "@/app/model/dataPribadi";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,20 +25,29 @@ export function GET() {
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, res: NextResponse) {
     try {
-        const user = await req.json();
+        const user: DataPribadi = await req.json() as DataPribadi;
 
         cookies().set({
-            name: "survey1",
-            value: JSON.stringify(user),
+            name: "dataPribadi",
+            value: JSON.stringify({
+                "Status Perkawinan": user.perkawinan,
+                "Tempat tinggal sekarang - Provinsi": user.provinces,
+                "Tempat tinggal sekarang - Kabupaten/Kota": user.daerah,
+                "Masukkan email pribadimu": user.email,
+                "Masukkan nomor telepon atau whatsappmu": user.telepon,
+                "Apakah akhir-akhir ini Anda sedang melanjutkan studi di perguruan tinggi?": user.studi,
+                "Apakah akhir-akhir ini Anda sedang bekerja atau berwirausaha?": user.kerja,
+                "Apakah anda bekerja atau berwirausaha?": user.pekerjaan,
+            }),
             maxAge: 60 * 60 * 24 * 30,
             sameSite: "strict",
             path: "/",
         });
 
         return NextResponse.json(
-            { message: "Survey 1 berhasil", data: user },
+            { message: "Data pribadi berhasil diperbarui", data: user },
             { status: 200 }
         );
     } catch (error) {

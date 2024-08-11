@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     cookies().set({
       name: "user",
-      value: JSON.stringify(dataUser),
+      value: JSON.stringify(dataUser[0]),
       maxAge: 60 * 60 * 24 * 30,
       sameSite: "strict",
       path: "/",

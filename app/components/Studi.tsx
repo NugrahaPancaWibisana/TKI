@@ -20,19 +20,28 @@ import { useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { negara } from "../data/dataNegara"
 import { Textarea } from "@/components/ui/textarea"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import Link from "next/link"
 
 const formSchema = z.object({
-  Studi: z.enum(["Dalam Negeri", "Luar Negeri"], { errorMap: () => ({ message: "Silakan pilih lokasi studi." }) }),
-  jenjangPendidikan: z.enum(["Dalam Negeri", "Luar Negeri"], { errorMap: () => ({ message: "Silakan pilih lokasi studi." }) }),
-  negaraStudi: z.string(),
-  perguruanTinggi: z.string(),
-  jurusan: z.string(),
-  alasan: z
-    .string()
-    .min(10, {
-      message: "Alasan anda melanjutkan pendidikan harus lebih dari 10 karakter",
-    })
+  Studi: z.enum(["Dalam Negeri", "Luar Negeri"], {
+    errorMap: () => ({ message: "Silakan pilih lokasi studi." }),
+  }),
+  negaraStudi: z.string().min(1, { message: "Negara studi tidak boleh kosong." }).optional(),
+  jenjangPendidikan: z.string().min(1, { message: "Jenjang pendidikan tidak boleh kosong." }),
+  perguruanTinggi: z.string().min(1, { message: "Perguruan tinggi tidak boleh kosong." }),
+  jurusan: z.string().min(1, { message: "Jurusan tidak boleh kosong." }),
+  pilihan: z.string().min(1, { message: "Pilihan tidak boleh kosong." }),
+  tanggal: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, { message: "Tanggal harus dalam format YYYY-MM-DD." }),
+  alasan: z.string().min(10, {
+    message: "Alasan anda melanjutkan pendidikan harus lebih dari 10 karakter",
+  }),
 })
+  .refine((data) => data.Studi === "Dalam Negeri" || data.negaraStudi, {
+    message: "Negara studi harus diisi jika memilih Luar Negeri.",
+    path: ["negaraStudi"],
+  });
 
 export function Studi() {
   const [luarNegeri, setLuarNegeri] = useState<boolean>(false);
@@ -57,7 +66,10 @@ export function Studi() {
                 <FormLabel>Dimana lokasi tempat Anda melanjutkan studi?</FormLabel>
                 <FormControl>
                   <RadioGroup
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      setLuarNegeri(value === "Luar Negeri")
+                    }}
                     defaultValue={field.value}
                     className="flex flex-col space-y-1"
                   >
@@ -83,12 +95,12 @@ export function Studi() {
               </FormItem>
             )}
           />
-          <Separator className="my-4" />
+          <Separator className={`my-4 ${luarNegeri ? '' : 'hidden'}`} />
           <FormField
             control={form.control}
             name="negaraStudi"
             render={({ field }) => (
-              <FormItem className="w-full">
+              <FormItem className={`w-full ${luarNegeri ? '' : 'hidden'}`}>
                 <FormLabel>Negara</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
@@ -177,7 +189,7 @@ export function Studi() {
                 <FormItem className="w-full">
                   <FormLabel>Nama Perguruan Tinggi?</FormLabel>
                   <FormControl>
-                    <Input type="text" placeholder="Perguruan Tinggi" {...field} required />
+                    <Input type="text" placeholder="Perguruan Tinggi" {...field} />
                   </FormControl>
                   <FormDescription>
                     Masukkan nama perguruan tinggi
@@ -198,10 +210,6 @@ export function Studi() {
                       type="text"
                       placeholder="Program studi/Bidang keahlian"
                       {...field}
-                      onChange={(e) => {
-                        field.onChange(e);
-                      }}
-                      required
                     />
                   </FormControl>
                   <FormDescription>
@@ -215,13 +223,13 @@ export function Studi() {
           <Separator className="my-4" />
           <FormField
             control={form.control}
-            name="jenjangPendidikan"
+            name="pilihan"
             render={({ field }) => (
               <FormItem className="w-full">
                 <FormLabel>
                   Apakah program studi/bidang keahlian yang Anda tempuh saat ini selaras dengan program/kompetensi keahlian di SMK?
                 </FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} required>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih" />
@@ -229,17 +237,18 @@ export function Studi() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)">
-                      Sangat tidak selaras (program studi non-vokasi, misal: ilmu bahasa, matematika, sosiologi)
+                      Sangat tidak selaras <br className="block md:hidden" /> (program studi non-vokasi, misal: <br className="block md:hidden" /> ilmu bahasa, matematika, sosiologi)
                     </SelectItem>
                     <SelectItem value="Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)">
-                      Tidak Selaras (program studi vokasi dengan bidang keahlian yang berbeda)
+                      Tidak Selaras <br className="block md:hidden" /> (program studi vokasi dengan <br className="block md:hidden" /> bidang keahlian yang berbeda)
                     </SelectItem>
                     <SelectItem value="Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)">
-                      Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)
+                      Selaras <br className="block md:hidden" /> (berbeda program keahlian <br className="block md.hidden" /> tetapi masih dalam ruang lingkup <br className="block md.hidden" /> bidang keahlian yang sama)
                     </SelectItem>
                     <SelectItem value="Sangat selaras (program keahlian yang sama)">
-                      Sangat selaras (program keahlian yang sama)
+                      Sangat selaras <br className="block md:hidden" /> (program keahlian yang sama)
                     </SelectItem>
+
                   </SelectContent>
                 </Select>
                 <FormDescription>
@@ -253,7 +262,7 @@ export function Studi() {
           <Separator className="my-4" />
           <FormField
             control={form.control}
-            name="jurusan"
+            name="tanggal"
             render={({ field }) => (
               <FormItem className="place-self-start">
                 <FormLabel>Kapan Anda mulai studi di Perguruan Tinggi?</FormLabel>
@@ -283,7 +292,26 @@ export function Studi() {
             )}
           />
 
-          <Button type="submit" className="place-self-end bg-green-500 mt-5">Submit</Button>
+          <div className="flex justify-between gap-4 place-self-end mt-5">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button type="reset" variant="outline">Kembali</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Apakah Anda yakin?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Tindakan ini tidak dapat menghapus semua progress anda, dan kembali ke survey awal.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal</AlertDialogCancel>
+                  <AlertDialogAction><Link href={"/survey/step-1"}>Ya, Kembali</Link></AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button type="submit" className="bg-green-500">Simpan dan lanjutkan</Button>
+          </div>
         </section>
       </form>
     </Form>
