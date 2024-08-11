@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import axios from "axios"
 import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 const FormSchema = z.object({
     perkawinan: z.string({ required_error: "Silakan pilih status perkawinan." })
@@ -44,6 +45,7 @@ const FormSchema = z.object({
 
 export function Form1() {
     const router = useRouter();
+    const [click, setClick] = useState<boolean>(false);
     const [daerah, setDaerah] = useState<{ label: string; value: string; id: number }[]>([]);
     const [pekerjaan, setPekerjaan] = useState<boolean>(false);
     const form = useForm<z.infer<typeof FormSchema>>({
@@ -60,20 +62,33 @@ export function Form1() {
     })
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
+        setClick(true)
         try {
             await axios.post("/api/users/survey/step1", data);
             toast({
                 title: "Data berhasil disimpan",
             })
 
-            localStorage.setItem("pilihan", JSON.stringify({
-                studi: data.studi,
-                kerja: data.kerja,
-                pekerjaan: pekerjaan ? data.pekerjaan : null
-            }))
+            if (data.studi === "ya" || data.kerja === "ya") {
+                localStorage.setItem("pilihan", JSON.stringify({
+                    studi: data.studi,
+                    kerja: data.kerja,
+                    pekerjaan: pekerjaan ? data.pekerjaan : null
+                }))
+            } else {
+                localStorage.setItem("pilihan", JSON.stringify({
+                    studi: "tidak",
+                    kerja: "tidak",
+                    pekerjaan: "tidak"
+                }))
+            }
 
             setTimeout(() => {
-                router.push('/survey/step-2');
+                if (data.studi === "ya" && data.kerja === "ya") {
+                    router.push('/survey/step-2/dua-pilihan/studi');
+                } else {
+                    router.push('/survey/step-2');
+                }
             }, 2000)
         } catch (error) {
             console.error(error)
@@ -82,6 +97,8 @@ export function Form1() {
                 description: "Terjadi kesalahan. Silakan coba lagi nanti.",
                 variant: "destructive"
             })
+
+            setClick(false)
         }
     }
 
@@ -358,7 +375,15 @@ export function Form1() {
                             </FormItem>
                         )}
                     />
-                    <Button className="place-self-end" type="submit">Simpan Dan Lanjut</Button>
+                    {
+                        !click ?
+                            <Button className="place-self-end" type="submit">Simpan Dan Lanjut</Button>
+                            :
+                            <Button disabled className="place-self-end">
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Tunggu Sebentar
+                            </Button>
+                    }
                 </section>
             </form>
         </Form>

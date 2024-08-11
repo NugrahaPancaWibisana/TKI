@@ -1,5 +1,8 @@
 'use client'
+import { Bekerja } from '@/app/components/Bekerja';
+import { Berwirausaha } from '@/app/components/Berwirausaha';
 import { Studi } from '@/app/components/Studi';
+import { TidakSiap } from '@/app/components/TidakSiap';
 import { useEffect, useState } from 'react';
 
 interface Tampilan {
@@ -25,29 +28,26 @@ export default function Page() {
     }
 
     function tampilkanPilihan(pilihan1: boolean, pilihan2: boolean, pilihan3?: string | null | undefined) {
-        if (pilihan1 && pilihan2 && pilihan3 === "bekerja") {
-            return "Anda memilih yang studi sambil bekerja";
-        } else if (pilihan1 && pilihan2 && pilihan3 === "berwirausaha") {
-            return "Anda memilih yang studi sambil berwirausaha";
-        } else if (pilihan1 && !pilihan2) {
+        if (pilihan1 && !pilihan2) {
             return <Studi />;
         } else if (!pilihan1 && pilihan2 && pilihan3 === "bekerja") {
-            return "Anda memilih yang bekerja saja";
+            return <Bekerja />;
         } else if (!pilihan1 && pilihan2 && pilihan3 === "berwirausaha") {
-            return "Anda memilih yang berwirausaha saja";
+            return <Berwirausaha />;
         } else {
-            return "Anda belum siap studi dan kerja";
+            return <TidakSiap />;
         }
     }
 
     function tampilan(): Tampilan {
-        if (aktifitasLulusan?.studi) {
+        if (aktifitasLulusan?.studi === "ya") {
             return {
                 border: "border-green-500",
                 bg: "bg-green-500",
                 text: "text-green-500"
             }
-        } else if (aktifitasLulusan?.kerja) {
+        }
+        else if (aktifitasLulusan?.kerja === "ya") {
             return {
                 border: "border-blue-500",
                 bg: "bg-blue-500",

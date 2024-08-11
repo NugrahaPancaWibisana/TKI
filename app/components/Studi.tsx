@@ -16,12 +16,16 @@ import {
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { negara } from "../data/dataNegara"
 import { Textarea } from "@/components/ui/textarea"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import Link from "next/link"
+import axios from "axios"
+import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
   Studi: z.enum(["Dalam Negeri", "Luar Negeri"], {
@@ -44,13 +48,56 @@ const formSchema = z.object({
   });
 
 export function Studi() {
+  const router = useRouter();
+  const [aktifitasLulusan, setAktifitasLulusan] = useState<{ studi: string, kerja: string, pekerjaan: string } | null>(null);
+  const [click, setClick] = useState<boolean>(false);
   const [luarNegeri, setLuarNegeri] = useState<boolean>(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      negaraStudi: "Indonesia",
+      jenjangPendidikan: "",
+      perguruanTinggi: "",
+      jurusan: "",
+      alasan: "",
+    },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const data = localStorage.getItem("pilihan");
+      if (data) {
+        setAktifitasLulusan(JSON.parse(data));
+      }
+    }
+  }, []);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setClick(true)
+    try {
+      await axios.post('/api/users/survey/step2/studi', values)
+
+      toast({
+        title: "Data berhasil dikirimkan",
+      })
+
+      setTimeout(() => {
+        if (aktifitasLulusan?.studi === "ya" && aktifitasLulusan?.kerja === "ya" && aktifitasLulusan.pekerjaan === "bekerja") {
+          router.push('/survey/step-2/dua-pilihan/bekerja')
+        } else {
+          router.push('/survey/step-2/dua-pilihan/wirausaha')
+        }
+      }, 2000)
+    } catch (error) {
+      console.error('Terjadi kesalahan saat mengirim data:', error)
+      toast({
+        title: "Terjadi kesalahan saat mengirim data",
+      })
+
+      setTimeout(() => {
+        setClick(false)
+      }, 2000)
+    }
   }
 
   return (
@@ -243,7 +290,7 @@ export function Studi() {
                       Tidak Selaras <br className="block md:hidden" /> (program studi vokasi dengan <br className="block md:hidden" /> bidang keahlian yang berbeda)
                     </SelectItem>
                     <SelectItem value="Selaras (berbeda program keahlian tetapi masih dalam ruang lingkup bidang keahlian yang sama)">
-                      Selaras <br className="block md:hidden" /> (berbeda program keahlian <br className="block md.hidden" /> tetapi masih dalam ruang lingkup <br className="block md.hidden" /> bidang keahlian yang sama)
+                      Selaras <br className="block md:hidden" /> (berbeda program keahlian <br className="block md:hidden" /> tetapi masih dalam ruang lingkup <br className="block md:hidden" /> bidang keahlian yang sama)
                     </SelectItem>
                     <SelectItem value="Sangat selaras (program keahlian yang sama)">
                       Sangat selaras <br className="block md:hidden" /> (program keahlian yang sama)
@@ -310,7 +357,15 @@ export function Studi() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button type="submit" className="bg-green-500">Simpan dan lanjutkan</Button>
+            {
+              !click ?
+                <Button type="submit" className="bg-green-500">Kirim dan lanjutkan</Button>
+                :
+                <Button disabled className="bg-green-500">
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Tunggu Sebentar
+                </Button>
+            }
           </div>
         </section>
       </form>

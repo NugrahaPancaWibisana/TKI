@@ -54,26 +54,28 @@ export function Login() {
                     ),
                     variant: "destructive"
                 });
+
+                setClick(false)
+            } else {
+                toast({
+                    title: "Login berhasil",
+                    description: (
+                        <>
+                            Selamat datang, {userData.nama}!
+                            <br />
+                            Kamu akan diarahkan ke halaman berikutnya.
+                        </>
+                    ),
+                });
+
+                setTimeout(() => {
+                    if (userData.kelas === 'admin') {
+                        router.push('/admin');
+                    } else {
+                        router.push('/survey/step-1');
+                    }
+                }, 2000)
             }
-
-            toast({
-                title: "Login berhasil",
-                description: (
-                    <>
-                        Selamat datang, {userData.nama}!
-                        <br />
-                        Kamu akan diarahkan ke halaman berikutnya.
-                    </>
-                ),
-            });
-
-            setTimeout(() => {
-                if (userData.kelas === 'admin') {
-                    router.push('/admin');
-                } else {
-                    router.push('/survey/step-1');
-                }
-            }, 2000)
         } catch (error) {
             console.error(error);
             toast({

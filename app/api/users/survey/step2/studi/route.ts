@@ -7,21 +7,39 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
     try {
-        const user: DetailStudi = await req.json();
+        const studiRequest: DetailStudi = await req.json();
+        const userData = await JSON.parse(cookies().get("user")?.value!);
+        const dataPribadi = await JSON.parse(cookies().get("dataPribadi")?.value!);
 
-        const dataPribadi = await JSON.parse(cookies().get("user")?.value!);
-        const survey = {
-            "Dimana lokasi tempat Anda melanjutkan studi?": user.Studi,
-            "Negara?": user.negaraStudi,
-            "Jenjang pendidikan?": user.jenjangPendidikan,
-            "Nama Perguruan Tinggi?": user.perguruanTinggi,
-            "Nama Program studi/Bidang keahlian?": user.jurusan,
-            "Apakah program studi/bidang keahlian yang Anda tempuh saat ini selaras dengan program/kompetensi keahlian di SMK?": user.pilihan,
-            "Kapan Anda mulai studi di Perguruan Tinggi?": user.tanggal,
-            "Apa alasan Anda melanjutkan pendidikan?": user.alasan,
-        }
+        const surveyData = {
+            "Nomor Urut": userData.urut,
+            "Nomor Induk": userData.induk,
+            "NISN": userData.nisn,
+            "NIK": userData.nik,
+            "Nama": userData.nama,
+            "Jenis Kelamin": userData.jenisKelamin,
+            "Kelas": userData.kelas,
+            "Status Perkawinan": dataPribadi["Status Perkawinan"],
+            "Tempat tinggal sekarang - Provinsi": dataPribadi["Tempat tinggal sekarang - Provinsi"],
+            "Tempat tinggal sekarang - Kabupaten/Kota": dataPribadi["Tempat tinggal sekarang - Kabupaten/Kota"],
+            "Masukkan email pribadimu": dataPribadi["Masukkan email pribadimu"],
+            "Masukkan nomor telepon atau whatsappmu": dataPribadi["Masukkan nomor telepon atau whatsappmu"],
+            "Apakah akhir-akhir ini Anda sedang melanjutkan studi di perguruan tinggi?": dataPribadi["Apakah akhir-akhir ini Anda sedang melanjutkan studi di perguruan tinggi?"],
+            "Apakah akhir-akhir ini Anda sedang bekerja atau berwirausaha?": dataPribadi["Apakah akhir-akhir ini Anda sedang bekerja atau berwirausaha?"],
+            "Apakah anda bekerja atau berwirausaha?": dataPribadi["Apakah anda bekerja atau berwirausaha?"],
+            "Dimana lokasi tempat Anda melanjutkan studi?": studiRequest.Studi,
+            "Negara": studiRequest.negaraStudi,
+            "Jenjang pendidikan": studiRequest.jenjangPendidikan,
+            "Nama Perguruan Tinggi": studiRequest.perguruanTinggi,
+            "Nama Program studi/Bidang keahlian": studiRequest.jurusan,
+            "Apakah program studi/bidang keahlian yang Anda tempuh saat ini selaras dengan program/kompetensi keahlian di SMK?": studiRequest.pilihan,
+            "Kapan Anda mulai studi di Perguruan Tinggi?": studiRequest.tanggal,
+            "Apa alasan Anda melanjutkan pendidikan?": studiRequest.alasan
+        };
 
-        const data = { ...dataPribadi[0], ...survey }
+        const answers = Object.values(surveyData);
+
+        const data = [answers];
 
         const result = await SurveyService.sendSurveyDataStudi(data);
 
